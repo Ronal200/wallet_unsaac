@@ -371,7 +371,7 @@ Este último comando no muestra archivos sensibles.
 | 11 | Permiso INTERNET en el manifiesto principal. | [X] |
 | 12 | flutter analyze sin errores. | [x] |
 | 13 | App ejecutada en emulador o dispositivo con capturas. | [x] |
-| 14 | README y repositorio remoto configurados. | [ ] |
+| 14 | README y repositorio remoto configurados. | [X] |
 
 # 10. Versionamiento con Git y GitHub
 
