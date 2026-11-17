@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wallet_unsaac/core/config/firebase_status.dart';
@@ -8,13 +9,15 @@ import 'package:wallet_unsaac/features/wallet/presentation/widgets/balance_card.
 import 'package:wallet_unsaac/features/wallet/presentation/widgets/firebase_status_card.dart';
 import 'package:wallet_unsaac/features/wallet/presentation/widgets/movement_tile.dart';
 
-/// Pantalla principal de Wallet UNSAAC (Sesión 1).
+/// Pantalla principal de Wallet UNSAAC.
 ///
-/// Muestra el resumen que entrega el repositorio y permite alternar el tema.
-/// El cambio de tema lo resuelve `ThemeCubit`; la pantalla solo envía la
-/// intención del usuario y se reconstruye cuando el estado cambia.
+/// Muestra el resumen de la billetera y permite cambiar
+/// entre tema claro, oscuro y sistema.
 class WalletHomePage extends StatefulWidget {
-  const WalletHomePage({super.key, required this.firebaseStatus});
+  const WalletHomePage({
+    super.key,
+    required this.firebaseStatus,
+  });
 
   final FirebaseStatus firebaseStatus;
 
@@ -34,11 +37,11 @@ class _WalletHomePageState extends State<WalletHomePage> {
   Future<void> _reload() async {
     final future = context.read<WalletRepository>().loadSummary();
     setState(() => _summaryFuture = future);
+
     try {
       await future;
     } on Exception {
-      // El estado de error se representa en la interfaz; aquí solo se evita
-      // que el RefreshIndicator propague la excepción.
+      // El estado de error se representa en la interfaz.
     }
   }
 
@@ -56,7 +59,27 @@ class _WalletHomePageState extends State<WalletHomePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+
+    // Obtener el modo actual del ThemeCubit.
+    final themeMode = context.watch<ThemeCubit>().state.mode;
+
+    // Icono y tooltip según el modo seleccionado.
+    IconData themeIcon;
+    String themeTooltip;
+
+    switch (themeMode) {
+      case ThemeMode.light:
+        themeIcon = Icons.light_mode_rounded;
+        themeTooltip = 'Tema claro';
+
+      case ThemeMode.dark:
+        themeIcon = Icons.dark_mode_rounded;
+        themeTooltip = 'Tema oscuro';
+
+      case ThemeMode.system:
+        themeIcon = Icons.settings_brightness_rounded;
+        themeTooltip = 'Tema del sistema';
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -70,27 +93,32 @@ class _WalletHomePageState extends State<WalletHomePage> {
             const SizedBox(width: 8),
             const Text(
               'Wallet UNSAAC',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 20),
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 20,
+              ),
             ),
           ],
         ),
         actions: [
           IconButton(
-            tooltip: isDark ? 'Activar tema claro' : 'Activar tema oscuro',
-            icon: Icon(
-              isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-            ),
+            tooltip: themeTooltip,
+            icon: Icon(themeIcon),
             onPressed: () => context.read<ThemeCubit>().toggle(),
           ),
           const SizedBox(width: 8),
         ],
       ),
+
       body: FutureBuilder<WalletSummary>(
         future: _summaryFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
           }
+
           if (snapshot.hasError) {
             return _ErrorView(
               message: 'No se pudo cargar el resumen de la billetera.',
@@ -99,6 +127,7 @@ class _WalletHomePageState extends State<WalletHomePage> {
           }
 
           final summary = snapshot.data!;
+
           return RefreshIndicator(
             onRefresh: _reload,
             child: ListView(
@@ -111,18 +140,26 @@ class _WalletHomePageState extends State<WalletHomePage> {
                   ),
                 ),
                 const SizedBox(height: 4),
+
                 Text(
                   'Este es el resumen de tus finanzas en noviembre de 2026.',
-                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
+
                 const SizedBox(height: 20),
+
                 BalanceCard(summary: summary),
+
                 const SizedBox(height: 20),
+
                 Row(
                   children: [
                     Expanded(
                       child: FilledButton.tonalIcon(
-                        onPressed: () => _showComingSoon('Registrar ingreso'),
+                        onPressed: () =>
+                            _showComingSoon('Registrar ingreso'),
                         icon: const Icon(Icons.add_rounded),
                         label: const Text('Ingreso'),
                       ),
@@ -130,14 +167,17 @@ class _WalletHomePageState extends State<WalletHomePage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _showComingSoon('Registrar egreso'),
+                        onPressed: () =>
+                            _showComingSoon('Registrar egreso'),
                         icon: const Icon(Icons.remove_rounded),
                         label: const Text('Egreso'),
                       ),
                     ),
                   ],
                 ),
+
                 const SizedBox(height: 28),
+
                 Row(
                   children: [
                     Expanded(
@@ -149,12 +189,15 @@ class _WalletHomePageState extends State<WalletHomePage> {
                       ),
                     ),
                     TextButton(
-                      onPressed: () => _showComingSoon('El historial completo'),
+                      onPressed: () =>
+                          _showComingSoon('El historial completo'),
                       child: const Text('Ver todos'),
                     ),
                   ],
                 ),
+
                 const SizedBox(height: 4),
+
                 if (summary.isEmpty)
                   const _EmptyMovements()
                 else
@@ -162,9 +205,15 @@ class _WalletHomePageState extends State<WalletHomePage> {
                     MovementTile(movement: movement),
                     const SizedBox(height: 10),
                   ],
+
                 const SizedBox(height: 12),
-                FirebaseStatusCard(status: widget.firebaseStatus),
+
+                FirebaseStatusCard(
+                  status: widget.firebaseStatus,
+                ),
+
                 const SizedBox(height: 16),
+
                 Center(
                   child: Text(
                     'Datos de demostración · Wallet UNSAAC 1.0.0',
@@ -183,7 +232,10 @@ class _WalletHomePageState extends State<WalletHomePage> {
 }
 
 class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message, required this.onRetry});
+  const _ErrorView({
+    required this.message,
+    required this.onRetry,
+  });
 
   final String message;
   final Future<void> Function() onRetry;
@@ -191,13 +243,18 @@ class _ErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.cloud_off_rounded, size: 56, color: scheme.error),
+            Icon(
+              Icons.cloud_off_rounded,
+              size: 56,
+              color: scheme.error,
+            ),
             const SizedBox(height: 16),
             Text(
               message,
@@ -208,7 +265,9 @@ class _ErrorView extends StatelessWidget {
             Text(
               'Revisa la conexión y vuelve a intentarlo.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: scheme.onSurfaceVariant),
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 20),
             FilledButton.icon(
@@ -239,7 +298,9 @@ class _EmptyMovements extends StatelessWidget {
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 12),
-            const Text('Todavía no registraste movimientos.'),
+            const Text(
+              'Todavía no registraste movimientos.',
+            ),
           ],
         ),
       ),
