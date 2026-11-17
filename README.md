@@ -420,3 +420,109 @@ Después de crear el repositorio, copiar su URL y ejecutar:
 git remote add origin [URL_DEL_REPOSITORIO]
 git branch -M main
 git push -u origin main
+
+
+
+
+## 11. Reto 1 — Tema persistente entre sesiones
+
+### 11.1. Objetivo del reto
+
+El objetivo de este reto fue hacer que la aplicación Wallet UNSAAC recuerde el tema que selecciona el usuario, de manera que al cerrar y volver a abrir la aplicación se mantenga la misma apariencia que había elegido anteriormente.
+
+Para lograrlo, implementé un sistema de almacenamiento local utilizando `shared_preferences`, junto con `ThemeCubit` para controlar los cambios de tema. También se agregó la opción de utilizar el tema del sistema, permitiendo que la aplicación se adapte automáticamente a la configuración del dispositivo.
+
+### 11.2. Tecnologías utilizadas
+
+| Tecnología | Utilidad |
+|---|---|
+| Flutter | Desarrollo de la aplicación. |
+| Dart | Lenguaje de programación. |
+| shared_preferences | Almacenamiento local de la preferencia del tema. |
+| Flutter BLoC / Cubit | Gestión del estado del tema. |
+| Flutter Test | Ejecución de pruebas automatizadas. |
+
+### 11.3. Funcionamiento de la persistencia del tema
+
+Para implementar esta funcionalidad, utilicé `shared_preferences`, que permite guardar pequeños datos en el dispositivo y recuperarlos cuando se vuelve a iniciar la aplicación.
+
+El funcionamiento es el siguiente:
+
+1. Cuando se inicia la aplicación, se recupera el último tema que había seleccionado el usuario.
+2. Si existe un tema guardado, se utiliza esa configuración para iniciar la aplicación.
+3. Si todavía no existe una preferencia guardada, se utiliza `ThemeMode.system` como configuración inicial.
+4. Cuando el usuario cambia el tema, `ThemeCubit` actualiza el estado y guarda inmediatamente la nueva selección.
+5. Si se cierra completamente la aplicación y se vuelve a abrir, se recupera el último tema guardado.
+
+De esta manera, el usuario ya no necesita seleccionar nuevamente su tema cada vez que ingresa a la aplicación.
+
+### 11.4. Modos de visualización
+
+Se implementaron tres opciones de tema:
+
+| Modo | Descripción |
+|---|---|
+| Claro | Muestra la aplicación con colores claros. |
+| Oscuro | Muestra la aplicación con colores oscuros. |
+| Sistema | Adapta automáticamente la apariencia según la configuración del dispositivo. |
+
+El botón encargado de cambiar el tema sigue este orden:
+
+**Claro → Oscuro → Sistema → Claro**
+
+También se actualizan el icono y el tooltip del botón para indicar el modo que se encuentra seleccionado actualmente.
+
+### 11.5. Archivos modificados
+
+Para realizar este reto, se trabajó principalmente con los siguientes archivos:
+
+| Archivo | Función |
+|---|---|
+| `pubspec.yaml` | Se agregó la dependencia `shared_preferences`. |
+| `lib/core/theme/theme_preferences.dart` | Se encarga de guardar y recuperar la preferencia del tema. |
+| `lib/core/theme/theme_cubit.dart` | Administra los cambios de tema y guarda la nueva selección. |
+| `lib/main.dart` | Recupera la preferencia almacenada antes de ejecutar `runApp`. |
+| `test/` | Contiene las pruebas realizadas para comprobar el funcionamiento de la persistencia. |
+
+### 11.6. Manejo de valores inválidos
+
+También se tuvo en cuenta el caso en el que el valor almacenado no exista o se encuentre corrupto.
+
+Para evitar que esto genere errores al iniciar la aplicación, se estableció `ThemeMode.system` como valor predeterminado cuando no se reconoce la preferencia guardada.
+
+De esta manera, la aplicación puede continuar funcionando normalmente aunque el dato almacenado no sea válido.
+
+### 11.7. Importancia de cargar el tema antes de runApp
+
+La lectura de la preferencia se realiza en `main.dart`, antes de ejecutar `runApp`.
+
+Decidí hacerlo de esta manera porque, si la lectura se realizara después de mostrar la pantalla principal, primero podría aparecer la aplicación con el tema predeterminado y luego cambiar al tema guardado por el usuario.
+
+Esto provocaría un cambio visual innecesario al iniciar la aplicación.
+
+Al recuperar la preferencia antes de ejecutar `runApp`, la aplicación comienza directamente con el tema correcto y se evita ese cambio visual.
+
+### 11.8. Pruebas realizadas
+
+Para comprobar que la funcionalidad trabaja correctamente, se agregaron pruebas utilizando las herramientas de Flutter.
+
+Las pruebas permiten verificar los siguientes comportamientos:
+
+- Guardar una preferencia de tema y recuperarla posteriormente.
+- Comprobar que los cambios realizados desde `ThemeCubit` se almacenan correctamente.
+- Verificar que la aplicación utiliza `ThemeMode.system` cuando no existe una preferencia guardada.
+- Comprobar que un valor desconocido o inválido no provoca una excepción.
+
+Para ejecutar las pruebas del proyecto se utiliza el siguiente comando:
+
+```bash
+flutter test
+```
+
+### 11.9. Resultado del reto
+
+Con la implementación de este reto, la aplicación Wallet UNSAAC ya puede recordar la preferencia visual del usuario entre diferentes sesiones.
+
+Además, los cambios de tema se administran mediante `ThemeCubit`, evitando utilizar `setState` para esta funcionalidad y manteniendo la separación de responsabilidades dentro del proyecto.
+
+De esta manera, se cumplió el objetivo principal del reto: conservar el tema seleccionado incluso después de cerrar completamente y volver a iniciar la aplicación.
