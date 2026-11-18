@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wallet_unsaac/core/theme/theme_state.dart';
@@ -6,10 +5,8 @@ import 'package:wallet_unsaac/core/theme/theme_preferences.dart';
 
 /// Cubit que gestiona el tema de la aplicación.
 class ThemeCubit extends Cubit<ThemeState> {
-  ThemeCubit({
-    required ThemeMode initialMode,
-    required this._preferences,
-  }) : super(ThemeState(mode: initialMode));
+  ThemeCubit({required ThemeMode initialMode, required this._preferences})
+    : super(ThemeState(mode: initialMode));
 
   final ThemePreferences _preferences;
 

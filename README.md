@@ -525,3 +525,76 @@ Con la implementación de este reto, la aplicación Wallet UNSAAC ya puede recor
 Además, los cambios de tema se administran mediante `ThemeCubit`, evitando utilizar `setState` para esta funcionalidad y manteniendo la separación de responsabilidades dentro del proyecto.
 
 De esta manera, se cumplió el objetivo principal del reto: conservar el tema seleccionado incluso después de cerrar completamente y volver a iniciar la aplicación.
+
+
+
+---
+
+# 12. Reto 3 — Saldo con estados de carga, éxito y error
+
+## 12.1. Objetivo y alcance
+
+El objetivo de este reto fue mejorar la gestión del saldo de la billetera utilizando `BalanceCubit` de Flutter BLoC, reemplazando el uso de `FutureBuilder` para separar la lógica de los datos de la interfaz.
+
+Se implementaron estados de carga, éxito y error, mostrando el resumen financiero, los últimos movimientos y opciones para reintentar o actualizar los datos mediante `RefreshIndicator`. También se realizaron pruebas automatizadas para verificar su funcionamiento.
+
+**Alcance pendiente:** Se mantuvo `InMemoryWalletRepository` con datos de demostración. Todavía no se implementó la conexión con Firestore ni el almacenamiento permanente de ingresos y egresos.
+
+## 12.2. Diseño de la solución
+
+Para este reto se utilizó Cubit de Flutter BLoC para controlar los estados de la consulta financiera. Se creó `BalanceCubit`, que recibe `WalletRepository` mediante inyección de dependencias, evitando depender de una implementación específica.
+
+Además, se utilizó `BlocBuilder` para escuchar los cambios de estado y actualizar automáticamente la pantalla según los datos obtenidos.
+
+### Representación del error
+
+El error se representa mediante `BalanceFailure`, que muestra un mensaje de error y la opción de volver a intentarlo.
+
+### Funcionamiento del reintento
+
+Mediante `_reload()`, que ejecuta nuevamente `load()` para actualizar los datos. Este método también se utiliza con `RefreshIndicator`.
+
+### Acceso al repositorio
+
+El encargado de llamar al repositorio es `BalanceCubit`, mediante su método `load()`. La pantalla solamente escucha los estados y actualiza la información.
+
+### Estados implementados
+
+| Estado | Cuándo se emite | Qué muestra la interfaz |
+|---|---|---|
+| `BalanceInitial` | Al iniciar el Cubit. | Estado inicial de la consulta. |
+| `BalanceLoading` | Cuando comienza una consulta. | Indicador circular y mensaje «Cargando saldo...». |
+| `BalanceSuccess` | Cuando se obtiene correctamente el resumen financiero. | Saldo, ingresos, egresos y últimos movimientos. |
+| `BalanceFailure` | Cuando ocurre un error durante la consulta. | Mensaje de error y botón «Reintentar». |
+
+## 12.3. Implementación
+
+Los principales archivos utilizados para desarrollar el reto fueron:
+
+| Archivo | Propósito | Cambios realizados |
+|---|---|---|
+| `lib/features/wallet/presentation/cubits/balance_state.dart` | Definir los estados del saldo. | Se implementaron `BalanceInitial`, `BalanceLoading`, `BalanceSuccess` y `BalanceFailure`. |
+| `lib/features/wallet/presentation/cubits/balance_cubit.dart` | Gestionar la consulta financiera. | Se implementó `load()`, la emisión de estados y el manejo de excepciones. |
+| `lib/app.dart` | Configurar los proveedores. | Se integró `BalanceCubit` con el repositorio mediante inyección de dependencias. |
+| `lib/features/wallet/data/repositories/in_memory_wallet_repository.dart` | Proporcionar datos de demostración. | Se mantiene como implementación temporal del repositorio. |
+| `test/features/wallet/presentation/cubits/balance_cubit_test.dart` | Probar el funcionamiento del Cubit. | Se implementaron pruebas de éxito, error y reintento. |
+| `test/features/wallet/presentation/pages/wallet_home_page_test.dart` | Probar la interfaz principal. | Se verificó la visualización del saldo y los movimientos. |
+
+### Explicación de `isClosed`
+
+Permite comprobar si el Cubit sigue abierto antes de emitir un estado. Así se evitan errores cuando una consulta asíncrona termina después de que el Cubit se haya cerrado.
+
+## 12.4. Pruebas ejecutadas
+
+Se realizaron pruebas automatizadas para comprobar los diferentes comportamientos de `BalanceCubit`.
+
+| Prueba | Qué verifica | Resultado |
+|---|---|---|
+| Éxito | Emite `BalanceLoading` y posteriormente `BalanceSuccess` cuando la consulta funciona correctamente. | Aprobada |
+| Error | Emite `BalanceLoading` y posteriormente `BalanceFailure` cuando ocurre una excepción. | Aprobada |
+| Reintento | Después de un error, vuelve a consultar el repositorio y consigue emitir `BalanceSuccess`. | Aprobada |
+
+Para ejecutar las pruebas se utilizó el siguiente comando:
+
+```bash
+flutter test

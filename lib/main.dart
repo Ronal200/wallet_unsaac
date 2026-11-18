@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wallet_unsaac/app.dart';
@@ -10,9 +9,7 @@ Future<void> main() async {
 
   final firebaseStatus = await FirebaseBootstrap.initialize();
 
-  final preferences = ThemePreferences(
-    await SharedPreferences.getInstance(),
-  );
+  final preferences = ThemePreferences(await SharedPreferences.getInstance());
 
   final initialMode = await preferences.loadMode();
 

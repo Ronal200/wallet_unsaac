@@ -11,7 +11,8 @@ class FirebaseStatus {
 
   const FirebaseStatus.notConfigured() : this._(FirebaseState.notConfigured);
 
-  const FirebaseStatus.failed(String detail) : this._(FirebaseState.failed, detail);
+  const FirebaseStatus.failed(String detail)
+    : this._(FirebaseState.failed, detail);
 
   final FirebaseState state;
   final String? detail;

@@ -11,6 +11,9 @@ import 'package:wallet_unsaac/core/theme/theme_preferences.dart';
 import 'package:wallet_unsaac/features/wallet/data/repositories/in_memory_wallet_repository.dart';
 import 'package:wallet_unsaac/features/wallet/domain/repositories/wallet_repository.dart';
 import 'package:wallet_unsaac/features/wallet/presentation/pages/wallet_home_page.dart';
+import 'package:wallet_unsaac/features/wallet/presentation/cubits/balance_cubit.dart';
+import 'package:wallet_unsaac/features/wallet/data/repositories/loading_wallet_repository.dart';
+import 'package:wallet_unsaac/features/wallet/data/repositories/failing_wallet_repository.dart';
 
 /// Raíz de la aplicación.
 class WalletApp extends StatelessWidget {
@@ -30,14 +33,29 @@ class WalletApp extends StatelessWidget {
     return MultiRepositoryProvider(
       providers: [
         RepositoryProvider<WalletRepository>(
-          create: (_) => InMemoryWalletRepository(),
+          ///create: (_) => FailingWalletRepository(), para crear error de carga
+
+          ///create: (_) => LoadingWalletRepository(),// simula la carga 
+          create: (_) => InMemoryWalletRepository(), //utiliza la memoria
         ),
       ],
-      child: BlocProvider<ThemeCubit>(
-        create: (_) => ThemeCubit(
-          initialMode: initialThemeMode,
-          preferences: themePreferences,
-        ),
+      child: MultiBlocProvider(
+        providers: [
+          // Cubit para administrar el tema.
+          BlocProvider<ThemeCubit>(
+            create: (_) => ThemeCubit(
+              initialMode: initialThemeMode,
+              preferences: themePreferences,
+            ),
+          ),
+
+          // Cubit para administrar el saldo y sus estados.
+          BlocProvider<BalanceCubit>(
+            create: (context) => BalanceCubit(
+              context.read<WalletRepository>(),
+            )..load(),
+          ),
+        ],
         child: BlocBuilder<ThemeCubit, ThemeState>(
           builder: (context, themeState) {
             return MaterialApp(
